@@ -28,8 +28,9 @@ public class APIhandler {
             return searchResults;
         }
     public static void main(String[] args) throws IOException, InterruptedException {
-        APIhandler a = new APIhandler();
-        System.out.println(a.search("ss"));
+            APIhandler a = new APIhandler();
+            String url = a.returnURL(a.search("505")[0].getVideoId());
+        System.out.println(url);
     }
 }
 
