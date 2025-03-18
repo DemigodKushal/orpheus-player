@@ -2,14 +2,14 @@ package com;
 public class Song {
 
     private String title;
-    private String videoId;
+    private String VideoId;
     private String artist;
     private int duration;
 
     public Song(String title, String videoId, String songArtist, int songLength){
         this.title = title;
         this.artist = songArtist;
-        this.videoId = videoId;
+        this.VideoId = videoId;
         this.duration = songLength;
     }
 
@@ -27,7 +27,7 @@ public class Song {
 
 
     public String getVideoId() {
-        return videoId;
+        return VideoId;
     }
 
     public void setTitle(String title) {
@@ -35,7 +35,7 @@ public class Song {
     }
 
     public void setVideoId(String videoId) {
-        this.videoId = videoId;
+        this.VideoId = videoId;
     }
 
     public void setArtist(String artist) {
