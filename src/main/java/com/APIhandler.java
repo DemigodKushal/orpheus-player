@@ -17,8 +17,7 @@ public class APIhandler {
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
             String result = response.body();
             Gson gson = new Gson();
-            Song[] searchResults = gson.fromJson(response.body(), Song[].class);
-            return searchResults;
+            return gson.fromJson(response.body(), Song[].class);
         }
     public String returnURL(String videoId) throws IOException, InterruptedException {
         HttpClient client = HttpClient.newHttpClient();
@@ -29,6 +28,7 @@ public class APIhandler {
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
         return response.body();
     }
+
 }
 
 
