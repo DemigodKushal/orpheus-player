@@ -50,12 +50,9 @@ public class playlistHandler{
         if (Files.exists(playlist.getPlaylist().toPath())){
             try (Reader reader = Files.newBufferedReader(filePath)) {
                 JsonElement rootElement = JsonParser.parseReader(reader);
-
-                // Check if the file contains a JSON array
                 if (rootElement.isJsonArray()) {
                     jsonfile = rootElement.getAsJsonArray();
                 } else if (rootElement.isJsonObject()) {
-                    // If it's a single object, convert it into an array
                     jsonfile.add(rootElement.getAsJsonObject());
                 }
             } catch (IOException e) {
@@ -65,14 +62,20 @@ public class playlistHandler{
         jsonfile.add(newSong);
         try (Writer writer = Files.newBufferedWriter(filePath)) {
             gson.toJson(jsonfile, writer);
-            System.out.println("Song added successfully!");
+//            System.out.println("Song added successfully!");
         } catch (IOException e) {
             System.err.println("Error writing the JSON file: " + e.getMessage());
         }
 
     }
-    public void initialisePlaylist(Playlist playlist) throws FileNotFoundException {
-        Scanner sc = new Scanner(playlist.getPlaylist());
-        List<Song> songs = new ArrayList<>();
+    public Song[] initialisePlaylist(Playlist playlist) throws FileNotFoundException {
+        try {
+            String contents = Files.readString(playlist.getPlaylist().toPath());
+            return gson.fromJson(contents, Song[].class);
+        } catch (IOException e) {
+            System.err.println("Error opening playlist: " + e.getMessage());
+            return null;
+
+        }
     }
 }
