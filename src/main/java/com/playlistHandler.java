@@ -28,7 +28,7 @@ public class playlistHandler{
             return;
         }
         if(files == null){
-            return;
+            createPlaylist("Liked Songs");
         }
         for (File file : files){
             Playlist playlist  = new Playlist();
