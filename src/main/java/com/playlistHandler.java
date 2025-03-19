@@ -1,14 +1,8 @@
 package com;
-
-import javax.tools.FileObject;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.List;
-import java.util.Scanner;
-
 import com.google.gson.*;
 
 public class playlistHandler{
@@ -19,7 +13,7 @@ public class playlistHandler{
         try {
             file.createNewFile();
         } catch (IOException e) {
-            System.out.println("Playlist creation not possible " + e.getMessage());;
+            System.err.println("Playlist creation not possible " + e.getMessage());
         }
         Playlist playlist = new Playlist();
         playlist.setName(name);
@@ -29,6 +23,13 @@ public class playlistHandler{
     public void importPlaylists(){
         File directory = new File("C:\\playlists\\");
         File[] files = directory.listFiles();
+        if(!directory.exists()){
+            directory.mkdir();
+            return;
+        }
+        if(files == null){
+            return;
+        }
         for (File file : files){
             Playlist playlist  = new Playlist();
             playlist.setName(file.getName());
@@ -39,7 +40,7 @@ public class playlistHandler{
     }
 
     public void addSong(Playlist playlist, Song song){
-        JsonArray jsonfile = new JsonArray();
+        JsonArray jsonFile = new JsonArray();
         File file = playlist.getPlaylist();
         Path filePath = file.toPath();
         JsonObject newSong = new JsonObject();
@@ -50,29 +51,32 @@ public class playlistHandler{
         if (Files.exists(playlist.getPlaylist().toPath())){
             try (Reader reader = Files.newBufferedReader(filePath)) {
                 JsonElement rootElement = JsonParser.parseReader(reader);
-
-                // Check if the file contains a JSON array
                 if (rootElement.isJsonArray()) {
-                    jsonfile = rootElement.getAsJsonArray();
+                    jsonFile = rootElement.getAsJsonArray();
                 } else if (rootElement.isJsonObject()) {
-                    // If it's a single object, convert it into an array
-                    jsonfile.add(rootElement.getAsJsonObject());
+                    jsonFile.add(rootElement.getAsJsonObject());
                 }
             } catch (IOException e) {
                 System.err.println("Error reading the JSON file: " + e.getMessage());
             }
         }
-        jsonfile.add(newSong);
+        jsonFile.add(newSong);
         try (Writer writer = Files.newBufferedWriter(filePath)) {
-            gson.toJson(jsonfile, writer);
-            System.out.println("Song added successfully!");
+            gson.toJson(jsonFile, writer);
         } catch (IOException e) {
             System.err.println("Error writing the JSON file: " + e.getMessage());
         }
 
     }
-    public void initialisePlaylist(Playlist playlist) throws FileNotFoundException {
-        Scanner sc = new Scanner(playlist.getPlaylist());
-        List<Song> songs = new ArrayList<>();
+    public Song[] initialisePlaylist(Playlist playlist) {
+        try {
+            String contents = Files.readString(playlist.getPlaylist().toPath());
+            return gson.fromJson(contents, Song[].class);
+        } catch (IOException e) {
+            System.err.println("Error opening playlist: " + e.getMessage());
+            return new Song[0];
+
+        }
     }
+
 }
