@@ -2,14 +2,10 @@ package com;
 
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
-import javax.tools.FileObject;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.List;
-import java.util.Scanner;
 
 import com.google.gson.*;
 
@@ -140,6 +136,12 @@ public class playlistHandler{
             jsonFile.remove(songJson);
         }
         else System.err.println("Song Not Found");
+    }
+
+    public void deletePlaylist(Playlist playlist){
+        if(!playlists.remove(playlist)){
+            System.err.println("Playlist could not be removed");
+        }
     }
 
 }
