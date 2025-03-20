@@ -142,4 +142,10 @@ public class playlistHandler{
         else System.err.println("Song Not Found");
     }
 
+    public void deletePlaylist(Playlist playlist){
+        if(!playlists.remove(playlist)){
+            System.err.println("Playlist could not be removed");
+        }
+    }
+
 }
