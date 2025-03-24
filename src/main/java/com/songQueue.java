@@ -1,10 +1,10 @@
-package org.sample.sampleGUI;
+package com;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.sample.sampleGUI.APIhandler.Song;
+import com.APIhandler.Song;
 
 public class songQueue {
     final LinkedList<Song> queue = new LinkedList<>();
