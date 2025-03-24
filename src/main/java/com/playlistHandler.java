@@ -1,10 +1,6 @@
-package org.sample.sampleGUI;
+package com;
 
 import javax.swing.JOptionPane;
-import javax.swing.SwingUtilities;
-import org.sample.sampleGUI.APIhandler.Song;
-import org.sample.sampleGUI.APIhandler;
-import org.sample.sampleGUI.Playlist;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -13,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import com.APIhandler.Song;
 import com.google.gson.*;
 
 public class playlistHandler{
