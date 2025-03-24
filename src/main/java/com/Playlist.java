@@ -1,4 +1,4 @@
-package org.sample.sampleGUI;
+package com;
 
 import java.io.File;
 
