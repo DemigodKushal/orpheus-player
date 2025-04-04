@@ -321,24 +321,43 @@ public class MusicPlayerGUI extends JFrame {
 		styleIconButton(next);
 		getContentPane().add(next);
 		next.addActionListener(e -> new Thread(() -> {
-			try {
-				mediaPlayer.controls().stop();
-				songQueue.removePlayed();  // Remove current track
-				loadingProgress.setVisible(true);
-				Song nextSong = songQueue.next();
+		    try {
+		        // Stop current playback first
+		        mediaPlayer.controls().stop();
+		        
+		        // Move to next song in queue
+		        Song nextSong = songQueue.next(); // Use queue's next() method instead of removing
+		        
+		        if (nextSong != null) {
+		            SwingUtilities.invokeLater(() -> {
+		                loadingProgress.setVisible(true);
+		                nowPlayingLabel.setText("<html><center>" + nextSong.getTitle() + 
+		                                      "<br>--" + nextSong.getArtist() + "</center></html>");
+		            });
 
-				if (nextSong != null) {
-					URL url = new URL(apiHandler.returnURL(nextSong.getVideoId()));
-					preloadAndPlay(url, seekSlider);
+		            // Load and play new song
+		            URL url = new URL(apiHandler.returnURL(nextSong.getVideoId()));
+		            preloadAndPlay(url, seekSlider);
 
-					SwingUtilities.invokeLater(() -> {
-						play_pause.setSelected(true);
-						updateQueueDisplay();
-					});
-				}
-			} catch (Exception ex) {
-				ex.printStackTrace();
-			}
+		            SwingUtilities.invokeLater(() -> {
+		                updateThumbnail(nextSong.getThumbnailUrl());
+		                play_pause.setSelected(true);
+		                updateQueueDisplay();
+		            });
+		        } else {
+		            SwingUtilities.invokeLater(() -> {
+		                play_pause.setSelected(false);
+		                nowPlayingLabel.setText("No songs in queue");
+		                updateQueueDisplay();
+		            });
+		        }
+		    } catch (Exception ex) {
+		        ex.printStackTrace();
+		        SwingUtilities.invokeLater(() -> {
+		            loadingProgress.setVisible(false);
+		            showError("Error playing next song: " + ex.getMessage());
+		        });
+		    }
 		}).start());
 
 		// Adding loading Progress Bar for whenever a song is being loaded
@@ -363,15 +382,15 @@ public class MusicPlayerGUI extends JFrame {
 		thumbnail.setVerticalAlignment(JLabel.CENTER);
 		// Adding nowPLayingPanel which contains nowPLayingLabel
 		nowPlayingPanel = new JPanel();
-		nowPlayingPanel.setBounds(313, 392, 185, 32);
+		nowPlayingPanel.setBounds(313, 391, 185, 48);
 		nowPlayingPanel.setBackground(Color.BLACK);
 		getContentPane().add(nowPlayingPanel);
 		//  shows the title and artist of current song being played
 		nowPlayingLabel = new JLabel("");
-		nowPlayingLabel.setBounds(310, 392, 185, 23);
+		nowPlayingLabel.setBounds(313, 391, 185, 23);
 		nowPlayingLabel.setHorizontalAlignment(SwingConstants.CENTER);
 		nowPlayingLabel.setForeground(Color.WHITE);
-		nowPlayingLabel.setFont(new Font("Segoe UI", Font.ITALIC, 8));
+		nowPlayingLabel.setFont(new Font("Segoe UI", Font.ITALIC, 14));
 		nowPlayingPanel.add(nowPlayingLabel, BorderLayout.CENTER);
 		// addsongPL button initiallizes the whole Dialog Box which appears when we click on it to add a song to a playlist
 		addSongPl = new JToggleButton(addIcon);
@@ -505,7 +524,7 @@ public class MusicPlayerGUI extends JFrame {
 
 		// Adding a layered Pane for Seeking capabilities
 		JLayeredPane layeredSeekPane = new JLayeredPane();
-		layeredSeekPane.setBounds(265, 430, 288, 64);
+		layeredSeekPane.setBounds(265, 440, 288, 54);
 		getContentPane().add(layeredSeekPane);
 
 		timeLabel = new JLabel("   00:00                                                            00:00");
@@ -820,20 +839,25 @@ public class MusicPlayerGUI extends JFrame {
 		queueList.setModel(new DefaultListModel<>());
 		queueList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		queueList.setCellRenderer(new DefaultListCellRenderer() {
-			@Override
-			public Component getListCellRendererComponent(JList<?> list, Object value,
-														  int index, boolean isSelected, boolean cellHasFocus) {
-				Component c = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-
-				if (index == songQueue.getCurrentIndex()) {
-					c.setBackground(new Color(30, 215, 96));
-					c.setForeground(Color.BLACK);
-				} else {
-					c.setBackground(new Color(60, 60, 60));
-					c.setForeground(Color.WHITE);
-				}
-				return c;
-			}
+		    @Override
+		    public Component getListCellRendererComponent(JList<?> list, Object value,
+		                                                 int index, boolean isSelected, 
+		                                                 boolean cellHasFocus) {
+		        Component c = super.getListCellRendererComponent(list, value, index, 
+		                                                       isSelected, cellHasFocus);
+		        
+		        // Convert queue display index to actual queue index
+		        int actualIndex = songQueue.getCurrentIndex() + index;
+		        
+		        if (actualIndex == songQueue.getCurrentIndex()) {
+		            c.setBackground(new Color(30, 215, 96)); // Current song
+		            c.setForeground(Color.BLACK);
+		        } else {
+		            c.setBackground(new Color(60, 60, 60)); // Queued songs
+		            c.setForeground(Color.WHITE);
+		        }
+		        return c;
+		    }
 		});
 		queueList.setFont(new Font("Segoe UI", Font.PLAIN, 12));
 		queueList.setBackground(new Color(45, 45, 45));
@@ -1713,45 +1737,43 @@ public class MusicPlayerGUI extends JFrame {
 	}
 	//method to playsong which passes song and and a boolean(of if song is currently in Queue)
 	private void playSong(Song song, boolean fromQueue) {
-		SwingUtilities.invokeLater(() -> {
-			loadingProgress.setVisible(true);
-			loadingProgress.setIndeterminate(true);
-		});
+	    SwingUtilities.invokeLater(() -> {
+	        loadingProgress.setVisible(true);
+	        loadingProgress.setIndeterminate(true);
+	    });
 
-		try {
-			if(!fromQueue) {
-//	                songQueue.clear();
-				if(!songQueue.isEmpty()) songQueue.remove(0);
-				songQueue.addFirst(song);
-			}
+	    try {
+	        if (!fromQueue) {
+	            // Clear previous current song and add new one
+	            if (!songQueue.isEmpty()) {
+	                songQueue.remove(0); // Remove current song
+	            }
+	            songQueue.addFirst(song); // Add new song at position 0
+	            songQueue.setCurrentIndex(0); // Explicitly set position
+	        }
 
-			mediaPlayer.controls().stop();
-			APIhandler api=new APIhandler();
-			URL url = new URL(api.returnURL(song.getVideoId()));
+	        mediaPlayer.controls().stop();
+	        URL url = new URL(apiHandler.returnURL(song.getVideoId()));
 
-			SwingUtilities.invokeLater(() -> {
-				play_pause.setSelected(true);
-				updateThumbnail(song.getThumbnailUrl());
-				nowPlayingLabel.setText("<html><center>" + song.getTitle() + "<br>--" + song.getArtist() + "</center></html>");
-				loadingProgress.setVisible(false);
-				timeLabel.setText("   "+formatTime(0) +
-						"                                                            "
-						+ formatTime(song.getDuration() * 1000L));
-				updateQueueDisplay();
-			});
+	        SwingUtilities.invokeLater(() -> {
+	            updateThumbnail(song.getThumbnailUrl());
+	            nowPlayingLabel.setText("<html><center>" + song.getTitle() + 
+	                                  "<br>--" + song.getArtist() + "</center></html>");
+	            timeLabel.setText("   " + formatTime(0) + 
+	                             "                                                            " + 
+	                             formatTime(song.getDuration() * 1000L));
+	            updateQueueDisplay(); // Force UI refresh
+	        });
 
-			preloadAndPlay(url, seekSlider);
+	        preloadAndPlay(url, seekSlider);
 
-		} catch (Exception ex) {
-			SwingUtilities.invokeLater(() -> {
-				loadingProgress.setVisible(false);
-				thumbnail.setIcon(createFallbackIcon());
-				JOptionPane.showMessageDialog(MusicPlayerGUI.this,
-						"Error playing song: " + ex.getMessage(),
-						"Playback Error",
-						JOptionPane.ERROR_MESSAGE);
-			});
-		}
+	    } catch (Exception ex) {
+	        SwingUtilities.invokeLater(() -> {
+	            loadingProgress.setVisible(false);
+	            thumbnail.setIcon(createFallbackIcon());
+	            showError("Error playing song: " + ex.getMessage());
+	        });
+	    }
 	}
 	//Method autoplaynext enables next button action
 	private void autoPlayNext() {
