@@ -27,7 +27,9 @@ Now as one would expect in any music player, we have implemented playlists and a
 
 The main player gui consists of  basic media playback control such as seeking, pausing and playing,  next and previous, etc. It also displays the name, artist and the thumbnail of the current playing song. A small progress bar is displayed under this piece of ui to show that the app is working  on playing a song and has not gone unresponsive.
 
-The UI has been written in java-swing, and hence may not look and feel like the greatest of interfaces, but it gets the job done. Also due to lack of resources and knowledge, we could not get our hands on a remote hosting service to host our python script and hence it must run locally for now. This will be changed as soon as we figure out how to host stuff online for free.
+The UI has been written in java-swing, and hence may not look and feel like the greatest of interfaces, but it gets the job done. Also due to lack of resources and knowledge, we could not get our hands on a remote hosting service to host our python script and hence it must run locally for now. This will be changed as soon as we figure out how to host stuff online for free. 
+
+P.S: Required python libraries are present in requirements.txt
 
 # Made by:
 ## Parv Gandhi (Mathematics & Computing: Year 1) 24124035
