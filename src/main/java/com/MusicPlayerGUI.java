@@ -1844,36 +1844,428 @@ import com.google.gson.JsonParser;
 	            // 3. Scale to desired size (e.g., 180*180) with smooth interpolation
 	            Image scaledImage = croppedImage.getScaledInstance(
 	                targetSize, 
-	                targetSize, 
-	                Image.SCALE_SMOOTH
-	            );
-	            // 4. Convert to BufferedImage for better quality
-	            BufferedImage optimizedImage = new BufferedImage(
-	                targetSize, 
-	                targetSize, 
-	                BufferedImage.TYPE_INT_ARGB
-	            );
-	            Graphics2D g2d = optimizedImage.createGraphics();
-	            g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
-	            g2d.drawImage(scaledImage, 0, 0, null);
-	            g2d.dispose();
-	            return new ImageIcon(optimizedImage);
-	            
-	        } catch (IOException e) {
-	            // Fallback to placeholder if image loading fails
-	            return new ImageIcon("placeholder.jpg"); 
-	        }
-	    }
-	    //main
-	    public static void main(String[] args) throws IOException {
-	    	
-	    	JWindow splash = new JWindow();
-	    	
-	        splash.setSize(800, 600); // Set window size
-	        splash.setLocationRelativeTo(null);
+package com;
+	
+import java.io.File;
+import java.util.concurrent.TimeUnit;
+import uk.co.caprica.vlcj.player.base.MediaPlayer;
+import uk.co.caprica.vlcj.player.component.EmbeddedMediaPlayerComponent;
+import uk.co.caprica.vlcj.player.embedded.EmbeddedMediaPlayer;
+import uk.co.caprica.vlcj.player.base.MediaPlayerEventAdapter;	
+	
+import javax.imageio.ImageIO;
+import javax.swing.*;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.JTableHeader;
+import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableColumnModel;
+
+import java.awt.*;
+import java.awt.event.*;
+import java.net.URL;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.io.Reader;
+import java.io.Writer;
+import java.net.MalformedURLException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import com.APIhandler.Song;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+	//@wbp.parser.entryPoint
+	public class MusicPlayerGUI extends JFrame {
+		
+		static {
+		    // Workaround for WindowBuilder infinite loop
+		    if (java.awt.GraphicsEnvironment.isHeadless()) {
+		        System.setProperty("java.awt.headless", "false");
+		        System.setProperty("https.protocols", "TLSv1.2");
+		    }
+		    System.setProperty("wb.disable.b3ackground.designer.thread", "true");
+		}		
+		
+	    private long totalDuration;
+	    private EmbeddedMediaPlayerComponent mediaComponent;
+	    private EmbeddedMediaPlayer mediaPlayer;
+	    private JLabel timeLabel;
+	    private boolean isPaused;
+	    private String[] vidIDs;	    
+	    private JButton previous;
+	    private JButton next;
+	    private JToggleButton play_pause;
+	    private JTextField searchbox;
+	    private JButton searchbtn;
+	    private DefaultTableModel model;
+	    private JTable searchDisplay;
+	    private JLabel nowPlayingLabel;
+	    private JPanel nowPlayingPanel;
+	    private JLabel thumbnail;
+	    private JProgressBar loadingProgress;
+	    private JPanel thumbnailPanel;
+	    private JPanel queuePanel;
+	    private JList<String>  queueList;
+	    private APIhandler sapi=new APIhandler();
+	    private Timer uiTimer;  
+	    private JSlider seekSlider = new JSlider(0, 1000, 0);
+	    private volatile boolean seekInProgress = false;
+	    private volatile long seekTargetTime = -1;
+	    private volatile boolean seekShouldPlay = true;
+	    private JScrollPane scrollPane;
+	    private DefaultListModel<Object> listModel;
+	    private JPanel playlistPanel;
+	    private List<Playlist> playlists;
+	    private JList<Object> list;
+	    private boolean showingPlaylists = true;
+	    private playlistHandler plHandler;
+	    private Playlist currentPlaylistView = null;
+	    private List<Song> searchResults = new ArrayList<>();
+	    private songQueue songQueue=new songQueue();
+	    private JToggleButton showPlaylistbtn;
+	    private JToggleButton queuebutton;
+	    private JButton addPlaylistButton;
+	    private JButton backButton;
+	    private JTextField playlistFeild;
+	    private JToggleButton addSongPl;
+	  
+	    
+	    public MusicPlayerGUI() throws IOException {	
+	    	super("Swing Music Player");
+	        getContentPane().setForeground(new Color(192, 192, 192));
+	        getContentPane().setBackground(new Color(0, 0, 0));
+	        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+	        setSize(800, 600);
+	        setResizable(false);
+	        setTitle("Orpheus Player");
+	        setLocationRelativeTo(null);
+	        getContentPane().setLayout(null);
 	        
-	        // Replace with your logo path
-	        ImageIcon logo = null;
+	        mediaComponent=new EmbeddedMediaPlayerComponent();
+	   	    mediaPlayer = mediaComponent.mediaPlayer();
+	   	// Add to your media player initialization in constructor:
+	   	    mediaPlayer.submit(new Runnable() {
+	   	    	
+	   	    	
+	   	      @Override
+	   	      public void run() {
+	   	         // This ensures media player runs in its own thread
+	   	      }
+	   	   
+	   	    });
+	   	// In constructor, update media preparation options:
+	   	 mediaPlayer.media().prepare(
+	   	     ":avcodec-hw=any",
+	   	     ":drop-late-frames",
+	   	     ":skip-frames",
+	   	     ":audio-desync=50",
+	   	     ":http-continuous",
+	   	     ":http-reconnect",
+	   	     ":audio-resampler=soxr",
+	   	     ":audio-filter=scaletempo",
+	   	     ":audio-time-stretch",
+	   	     ":audio-replay-gain-mode=track",
+	   	     ":demuxer-seekable-cache=1"  // Add this for better seeking
+	   	    );
+	   	 	getContentPane().add(mediaComponent);
+	   	 	
+	   	 // loading all the icons images
+		   	 ImageIcon playIcon=new ImageIcon(convert(highQualityResize(ImageIO.read(MusicPlayerGUI.class.getResource("/icons/play_arrow_64dp_FFFFFF.png")),64,64),BufferedImage.TYPE_INT_ARGB));
+		   	 ImageIcon pauseIcon=new ImageIcon(convert(highQualityResize(ImageIO.read(MusicPlayerGUI.class.getResource("/icons/pause_64dp_FFFFFF.png")),64,64),BufferedImage.TYPE_INT_ARGB));
+		   	 ImageIcon prevIcon=new ImageIcon(convert(highQualityResize(ImageIO.read(MusicPlayerGUI.class.getResource("/icons/skip_previous_64dp_FFFFFF.png")),64,64),BufferedImage.TYPE_INT_ARGB));
+		   	 ImageIcon nextIcon=new ImageIcon(convert(highQualityResize(ImageIO.read(MusicPlayerGUI.class.getResource("/icons/skip_next_64dp_FFFFFF.png")),64,64),BufferedImage.TYPE_INT_ARGB));
+		   	 ImageIcon showPlaylistIcon=new ImageIcon(convert(highQualityResize(ImageIO.read(new File("D:\\\\codes\\\\eclipse\\\\sampleGUI\\\\icons\\\\playlist_play_64dp_FFFFFF.png")),32,32),BufferedImage.TYPE_INT_ARGB));
+		   	 ImageIcon queueIcon=new ImageIcon(convert(highQualityResize(ImageIO.read(MusicPlayerGUI.class.getResource("/icons/queue_music_64dp_FFFFFF.png")),32,32),BufferedImage.TYPE_INT_ARGB));	
+		   	 ImageIcon searchIcon=new ImageIcon(convert(highQualityResize(ImageIO.read(MusicPlayerGUI.class.getResource("/icons/search_64dp_FFFFFF.png")),24,24),BufferedImage.TYPE_INT_ARGB));	
+		   	 ImageIcon addPlaylistIcon=new ImageIcon(convert(highQualityResize(ImageIO.read(MusicPlayerGUI.class.getResource("/icons/playlist_add_64dp_FFFFFF.png")),16,16),BufferedImage.TYPE_INT_ARGB));	
+		   	 ImageIcon addIcon=new ImageIcon(convert(highQualityResize(ImageIO.read(MusicPlayerGUI.class.getResource("/icons/add_circle_64dp_FFFFFF_FILL0_wght400_GRAD0_opsz48.png")),32,32),BufferedImage.TYPE_INT_ARGB));	
+		   	 ImageIcon addedIcon=new ImageIcon(convert(highQualityResize(ImageIO.read(MusicPlayerGUI.class.getResource("/icons/task_alt_64dp_FFFFFF_FILL0_wght400_GRAD0_opsz48.png")),32,32),BufferedImage.TYPE_INT_ARGB));	
+		  
+		   	 
+		 // Creating Model for Search Display 	 
+		   	String[] columnNames = {"Title", "Artist", "Duration"};
+	        model = new DefaultTableModel(columnNames, 0) {
+	        	@Override
+	            public boolean isCellEditable(int row, int column) {
+	                return false; // all cells non-editable
+	            }
+	        };	
+	        
+	        searchDisplay = new JTable(model) {
+	            @Override
+	            public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
+	                Component c = super.prepareRenderer(renderer, row, column);
+	                
+	                // Zebra striping
+	                c.setBackground(row % 2 == 0 ? new Color(45, 45, 45) : new Color(50, 50, 50));
+	                c.setForeground(Color.WHITE);
+	                
+	                // Hover effect
+	                if (isRowSelected(row)) {
+	                    c.setBackground(new Color(30, 215, 96)); // Spotify green
+	                    c.setForeground(Color.BLACK);
+	                }
+	                
+	                // Padding
+	                ((JComponent)c).setBorder(BorderFactory.createEmptyBorder(0, 15, 0, 15));
+	                return c;
+	            }
+	        };
+	
+	        TableColumnModel columnModel = searchDisplay.getColumnModel();
+	        columnModel.getColumn(0).setPreferredWidth(150); // Title
+	        columnModel.getColumn(1).setPreferredWidth(120); // Artist
+	        columnModel.getColumn(2).setPreferredWidth(80);  // Duration 
+	        searchDisplay.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
+	        searchDisplay.setShowHorizontalLines(false);
+	        searchDisplay.setShowVerticalLines(false);
+	        searchDisplay.setIntercellSpacing(new Dimension(0, 5));
+	        searchDisplay.setRowHeight(25);
+	        searchDisplay.setSelectionBackground(new Color(30, 215, 96)); 
+	        searchDisplay.setSelectionForeground(Color.BLACK);
+	        searchDisplay.setBackground(new Color(40, 40, 40));
+	        searchDisplay.setForeground(Color.WHITE);
+	        searchDisplay.setBorder(null);
+	        searchDisplay.getTableHeader().setResizingAllowed(false);
+	        searchDisplay.getTableHeader().setReorderingAllowed(false);
+	        searchDisplay.getColumnModel().getColumn(2).setCellRenderer(new DefaultTableCellRenderer() {
+	            @Override
+	            public Component getTableCellRendererComponent(JTable table, Object value,
+	                    boolean isSelected, boolean hasFocus, int row, int column) {
+	                
+	                Component c = super.getTableCellRendererComponent(table, value, 
+	                    isSelected, hasFocus, row, column);
+	                
+	                ((JLabel)c).setHorizontalAlignment(SwingConstants.RIGHT);
+	                ((JLabel)c).setForeground(new Color(150, 150, 150));
+	                
+	                if (isSelected) {
+	                    c.setBackground(new Color(30, 215, 96));
+	                    ((JLabel)c).setForeground(Color.BLACK);
+	                }
+	                
+	                return c;
+	            }
+	        });
+	        
+	     
+	     // Adding ScrollPane in Search Display   
+	        scrollPane = new JScrollPane(searchDisplay);
+	        scrollPane.setForeground(new Color(69, 69, 69));
+	        scrollPane.setBackground(new Color(69, 69, 69));
+	        scrollPane.setBounds(277, 104, 265, 100);
+	        scrollPane.setBorder(BorderFactory.createEmptyBorder());
+	        scrollPane.getViewport().setBackground(new Color(40, 40, 40));
+	        getContentPane().add(scrollPane);
+	        scrollPane.setVisible(false);
+	        
+	      // Adding a Header in SearchDsiplay for better UI experience  
+	        JTableHeader header = searchDisplay.getTableHeader();
+	        header.setBackground(new Color(30, 30, 30));
+	        header.setForeground(new Color(150, 150, 150));
+	        header.setFont(new Font("Segoe UI", Font.BOLD, 12));
+	        header.setBorder(BorderFactory.createEmptyBorder());
+	        header.setPreferredSize(new Dimension(header.getWidth(), 20));
+	        searchDisplay.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
+	            @Override
+	            public Component getTableCellRendererComponent(JTable table, Object value,
+	                    boolean isSelected, boolean hasFocus, int row, int column) {
+	                
+	                Component c = super.getTableCellRendererComponent(table, value, 
+	                    isSelected, hasFocus, row, column);
+	                
+	                // Default styling
+	                c.setBackground(row % 2 == 0 ? 
+	                    new Color(45, 45, 45) : 
+	                    new Color(50, 50, 50));
+	                
+	                // Hover effect
+	                if (table.isRowSelected(row)) {
+	                    c.setBackground(new Color(30, 215, 96));
+	                    c.setForeground(Color.BLACK);
+	                } else if (table.isRowSelected(row)) {
+	                    c.setBackground(new Color(70, 70, 70));
+	                    c.setForeground(Color.WHITE);
+	                }
+	                
+	                // Text alignment
+	                ((JLabel)c).setBorder(BorderFactory.createEmptyBorder(0, 15, 0, 15));
+	                return c;
+	            }
+	        });
+	        
+	     // Adding listeners so that search results Highlight when hovered
+	        searchDisplay.addMouseMotionListener(new MouseMotionAdapter() {
+	            @Override
+	            public void mouseMoved(MouseEvent e) {
+	                int row = searchDisplay.rowAtPoint(e.getPoint());
+	                searchDisplay.setRowSelectionInterval(row, row);
+	            }
+	        });
+	        searchDisplay.getSelectionModel().addListSelectionListener(e -> {
+	            if (!e.getValueIsAdjusting()) {
+	                int row = searchDisplay.getSelectedRow();
+	                if (row >= 0) {
+	                    Song song = getSongFromSearchRow(row);
+	                    boolean isInPlaylist = isSongInAnyPlaylist(song);
+	                    addSongPl.setSelected(isInPlaylist);
+	                }
+	            }
+	        });
+	        
+	        // SearchButton initiallization
+	          searchbtn = new JButton(searchIcon);
+	          searchbtn.setForeground(new Color(69, 69, 69));
+	          searchbtn.setBackground(new Color(69, 69, 69));
+	          styleIconButton(searchbtn);
+	          searchbtn.setBounds(463, 67, 63, 27);
+	          getContentPane().add(searchbtn);
+	          searchbtn.setBackground(new Color(69, 69, 69));
+	        // SearchBox initailization 
+	          searchbox = new JTextField();
+	          searchbox.setForeground(new Color(255, 255, 255));
+	          searchbox.setBounds(319, 60, 155, 34);
+	          searchbox.setColumns(10);
+	          searchbox.setBorder(BorderFactory.createLineBorder(new Color(30,215,96)));
+	          searchbox.setBackground(new Color(59, 59, 59));	
+	          getContentPane().add(searchbox);
+	          
+
+           // Play_Pause toggle button initiallization
+	          play_pause = new JToggleButton("");
+	          play_pause.setBounds(375, 489, 64, 64);
+	          getContentPane().add(play_pause);
+	          play_pause.addActionListener(e -> {
+	              new Thread(() -> {
+	                  if (mediaPlayer.status().isPlaying()) {
+	                      mediaPlayer.controls().pause();
+	                      uiTimer.stop();
+	                  } else {
+	                      if (mediaPlayer.status().time() >= mediaPlayer.status().length() - 1000) {
+	                          mediaPlayer.controls().setTime(0);
+	                      }
+	                      mediaPlayer.controls().play();
+	                      uiTimer.start();
+	                  }
+	                  SwingUtilities.invokeLater(() -> {
+	                  });
+	              }).start();
+	          });
+	          play_pause.setForeground(new Color(69, 69, 69));
+	          play_pause.setBackground(new Color(69, 69, 69));
+	          play_pause.setIcon(playIcon);
+	          play_pause.setSelectedIcon(pauseIcon);
+	          styleIconButton(play_pause);
+	          
+	         // Previous Button initaillization 
+	          previous = new JButton(prevIcon);
+	          styleIconButton(previous);
+	          previous.setBounds(319, 504, 56, 32);
+	          getContentPane().add(previous);
+	          previous.setBackground(new Color(128, 128, 128));
+	          previous.addActionListener(e -> previousSong());
+	        //Necxt Button initiallization  
+	          next = new JButton(nextIcon);
+	          next.setBounds(439, 504, 56, 32);
+	          styleIconButton(next);
+	          getContentPane().add(next);
+	          next.addActionListener(e -> new Thread(() -> {
+	        	    try {
+	        	        mediaPlayer.controls().stop();
+	        	        songQueue.removePlayed();  // Remove current track
+	        	        loadingProgress.setVisible(true);
+	        	        Song nextSong = songQueue.next();
+	        	        
+	        	        if (nextSong != null) {
+	        	            URL url = new URL(sapi.returnURL(nextSong.getVideoId()));
+	        	            preloadAndPlay(url, seekSlider);
+	        	            
+	        	            SwingUtilities.invokeLater(() -> {
+	        	                play_pause.setSelected(true);
+	        	                updateQueueDisplay();
+	        	            });
+	        	        }
+	        	    } catch (Exception ex) {
+	        	        ex.printStackTrace();
+	        	    }
+	        	}).start());
+	          
+	         // Adding loading Progress Bar for whenever a song is being loaded 
+	          loadingProgress = new JProgressBar();
+              loadingProgress.setBounds(265, 555, 288, 5);
+              loadingProgress.setIndeterminate(true);
+              loadingProgress.setVisible(false);
+              loadingProgress.setForeground(new Color(30, 215, 96));
+              loadingProgress.setBackground(new Color(60, 60, 60));
+              getContentPane().add(loadingProgress);
+	          
+            // Adding thumbnail Panel for showing  thumbnails of Images  
+              thumbnailPanel = new JPanel(new BorderLayout());
+	          thumbnailPanel.setBounds(313, 205, 185, 185);
+	          thumbnailPanel.setBackground(new Color(0, 0, 0));
+	          getContentPane().add(thumbnailPanel);
+	        // Adding Jlabel which contains thumbnails of songs  
+	          thumbnail = new JLabel();
+	          thumbnail.setBackground(new Color(0, 0, 0));
+	          thumbnailPanel.add(thumbnail, BorderLayout.CENTER);
+	          thumbnail.setHorizontalAlignment(JLabel.CENTER);
+	          thumbnail.setVerticalAlignment(JLabel.CENTER);
+	        // Adding nowPLayingPanel which contains nowPLayingLabel
+	          nowPlayingPanel = new JPanel();
+              nowPlayingPanel.setBounds(313, 392, 185, 32);
+              nowPlayingPanel.setBackground(Color.BLACK);
+              getContentPane().add(nowPlayingPanel);
+            //  shows the title and artist of current song being played 
+              nowPlayingLabel = new JLabel("");
+              nowPlayingLabel.setBounds(310, 392, 185, 23);
+              nowPlayingLabel.setHorizontalAlignment(SwingConstants.CENTER);
+              nowPlayingLabel.setForeground(Color.WHITE);
+              nowPlayingLabel.setFont(new Font("Segoe UI", Font.ITALIC, 8));
+              nowPlayingPanel.add(nowPlayingLabel, BorderLayout.CENTER);
+	        // addsongPL button initiallizes the whole Dialog Box which appears when we click on it to add a song to a playlist 
+	          addSongPl = new JToggleButton(addIcon);
+	          addSongPl.setSelectedIcon(addedIcon);
+	          addSongPl.setForeground(new Color(255, 255, 255));
+              styleIconButton(addSongPl);
+              addSongPl.addActionListener(e -> {
+            	    int row = searchDisplay.getSelectedRow();
+            	    if (row == -1) return;
+
+            	    Song song = getSongFromSearchRow(row);
+            	    
+            	    // Dialog styling
+            	    JDialog dialog = new JDialog(this, "Add to Playlists", true);
+            	    dialog.setSize(300, 400);
+            	    dialog.setLocationRelativeTo(this);
+            	    dialog.getContentPane().setBackground(new Color(30, 30, 30));
+
+            	    // Main content panel
+            	    JPanel contentPanel = new JPanel(new BorderLayout(10, 10));
+            	    contentPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+            	    contentPanel.setBackground(new Color(30, 30, 30));
+
+            	    // Header
+            	    JLabel headerp = new JLabel("Select Playlists:");
+            	    headerp.setFont(new Font("Segoe UI", Font.BOLD, 16));
+            	    headerp.setForeground(new Color(30, 215, 96));  // Spotify green
+            	    headerp.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
+            	    contentPanel.add(headerp, BorderLayout.NORTH);
+
+            	    // Checkbox panel with scroll
+            	    JPanel checkPanel = new JPanel();
+            	    checkPanel.setLayout(new BoxLayout(checkPanel, BoxLayout.Y_AXIS));
+            	    checkPanel.setBackground(new Color(40, 40, 40));
+            	    
+            	    JScrollPane scrollPane = new JScrollPane(checkPanel);
+            	    scrollPane.setBorder(BorderFactory.createLineBorder(new Color(60, 60, 60), 1));
+          Icon logo = null;
 			try {
 				logo = new ImageIcon(convert(highQualityResize(ImageIO.read(MusicPlayerGUI.class.getResource("/icons/orpheus.png")), 800,600),BufferedImage.TYPE_INT_ARGB));
 			} catch (IOException e) {
