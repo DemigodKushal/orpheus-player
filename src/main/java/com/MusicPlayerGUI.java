@@ -287,28 +287,28 @@ public class MusicPlayerGUI extends JFrame {
 		play_pause.setBounds(375, 489, 64, 64);
 		getContentPane().add(play_pause);
 		play_pause.addActionListener(e -> {
-		    new Thread(() -> {
-		        if (mediaPlayer.status().isPlaying()) {
-		            mediaPlayer.controls().pause();
-		            uiTimer.stop();
-		        } else {
-		            // Handle empty player with existing queue
-		            if (!mediaPlayer.status().isPlayable() && !songQueue.isEmpty()) {
-		                Song current = songQueue.getCurrent();
-		                if (current != null) {
-		                    playSong(current, true);
-		                }
-		            } else if (songQueue.isEmpty()) {
-		                JOptionPane.showMessageDialog(MusicPlayerGUI.this,
-		                    "No songs in queue", "Playback Error",
-		                    JOptionPane.ERROR_MESSAGE);
-		            } else {
-		                mediaPlayer.controls().play();
-		            }
-		            uiTimer.start();
-		        }
-		        SwingUtilities.invokeLater(() -> play_pause.setSelected(mediaPlayer.status().isPlaying()));
-		    }).start();
+			new Thread(() -> {
+				if (mediaPlayer.status().isPlaying()) {
+					mediaPlayer.controls().pause();
+					uiTimer.stop();
+				} else {
+					// Handle empty player with existing queue
+					if (!mediaPlayer.status().isPlayable() && !songQueue.isEmpty()) {
+						Song current = songQueue.getCurrent();
+						if (current != null) {
+							playSong(current, true);
+						}
+					} else if (songQueue.isEmpty()) {
+						JOptionPane.showMessageDialog(MusicPlayerGUI.this,
+								"No songs in queue", "Playback Error",
+								JOptionPane.ERROR_MESSAGE);
+					} else {
+						mediaPlayer.controls().play();
+					}
+					uiTimer.start();
+				}
+				SwingUtilities.invokeLater(() -> play_pause.setSelected(mediaPlayer.status().isPlaying()));
+			}).start();
 		});
 		play_pause.setForeground(new Color(69, 69, 69));
 		play_pause.setBackground(new Color(69, 69, 69));
@@ -329,43 +329,43 @@ public class MusicPlayerGUI extends JFrame {
 		styleIconButton(next);
 		getContentPane().add(next);
 		next.addActionListener(e -> new Thread(() -> {
-		    try {
-		        // Stop current playback first
-		        mediaPlayer.controls().stop();
-		        
-		        // Move to next song in queue
-		        Song nextSong = songQueue.next(); // Use queue's next() method instead of removing
-		        
-		        if (nextSong != null) {
-		            SwingUtilities.invokeLater(() -> {
-		                loadingProgress.setVisible(true);
-		                nowPlayingLabel.setText("<html><center>" + nextSong.getTitle() + 
-		                                      "<br>--" + nextSong.getArtist() + "</center></html>");
-		            });
+			try {
+				// Stop current playback first
+				mediaPlayer.controls().stop();
 
-		            // Load and play new song
-		            URL url = new URL(apiHandler.returnURL(nextSong.getVideoId()));
-		            preloadAndPlay(url, seekSlider);
+				// Move to next song in queue
+				Song nextSong = songQueue.next(); // Use queue's next() method instead of removing
 
-		            SwingUtilities.invokeLater(() -> {
-		                updateThumbnail(nextSong.getThumbnailUrl());
-		                play_pause.setSelected(true);
-		                updateQueueDisplay();
-		            });
-		        } else {
-		            SwingUtilities.invokeLater(() -> {
-		                play_pause.setSelected(false);
-		                nowPlayingLabel.setText("No songs in queue");
-		                updateQueueDisplay();
-		            });
-		        }
-		    } catch (Exception ex) {
-		        ex.printStackTrace();
-		        SwingUtilities.invokeLater(() -> {
-		            loadingProgress.setVisible(false);
-		            showError("Error playing next song: " + ex.getMessage());
-		        });
-		    }
+				if (nextSong != null) {
+					SwingUtilities.invokeLater(() -> {
+						loadingProgress.setVisible(true);
+						nowPlayingLabel.setText("<html><center>" + nextSong.getTitle() +
+								"<br>--" + nextSong.getArtist() + "</center></html>");
+					});
+
+					// Load and play new song
+					URL url = new URL(apiHandler.returnURL(nextSong.getVideoId()));
+					preloadAndPlay(url, seekSlider);
+
+					SwingUtilities.invokeLater(() -> {
+						updateThumbnail(nextSong.getThumbnailUrl());
+						play_pause.setSelected(true);
+						updateQueueDisplay();
+					});
+				} else {
+					SwingUtilities.invokeLater(() -> {
+						play_pause.setSelected(false);
+						nowPlayingLabel.setText("No songs in queue");
+						updateQueueDisplay();
+					});
+				}
+			} catch (Exception ex) {
+				ex.printStackTrace();
+				SwingUtilities.invokeLater(() -> {
+					loadingProgress.setVisible(false);
+					showError("Error playing next song: " + ex.getMessage());
+				});
+			}
 		}).start());
 
 		// Adding loading Progress Bar for whenever a song is being loaded
@@ -847,25 +847,25 @@ public class MusicPlayerGUI extends JFrame {
 		queueList.setModel(new DefaultListModel<>());
 		queueList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		queueList.setCellRenderer(new DefaultListCellRenderer() {
-		    @Override
-		    public Component getListCellRendererComponent(JList<?> list, Object value,
-		                                                 int index, boolean isSelected, 
-		                                                 boolean cellHasFocus) {
-		        Component c = super.getListCellRendererComponent(list, value, index, 
-		                                                       isSelected, cellHasFocus);
-		        
-		        // Convert queue display index to actual queue index
-		        int actualIndex = songQueue.getCurrentIndex() + index;
-		        
-		        if (actualIndex == songQueue.getCurrentIndex()) {
-		            c.setBackground(new Color(30, 215, 96)); // Current song
-		            c.setForeground(Color.BLACK);
-		        } else {
-		            c.setBackground(new Color(60, 60, 60)); // Queued songs
-		            c.setForeground(Color.WHITE);
-		        }
-		        return c;
-		    }
+			@Override
+			public Component getListCellRendererComponent(JList<?> list, Object value,
+														  int index, boolean isSelected,
+														  boolean cellHasFocus) {
+				Component c = super.getListCellRendererComponent(list, value, index,
+						isSelected, cellHasFocus);
+
+				// Convert queue display index to actual queue index
+				int actualIndex = songQueue.getCurrentIndex() + index;
+
+				if (actualIndex == songQueue.getCurrentIndex()) {
+					c.setBackground(new Color(30, 215, 96)); // Current song
+					c.setForeground(Color.BLACK);
+				} else {
+					c.setBackground(new Color(60, 60, 60)); // Queued songs
+					c.setForeground(Color.WHITE);
+				}
+				return c;
+			}
 		});
 		queueList.setFont(new Font("Segoe UI", Font.PLAIN, 12));
 		queueList.setBackground(new Color(45, 45, 45));
@@ -1486,21 +1486,21 @@ public class MusicPlayerGUI extends JFrame {
 	}
 	//Method to to remove a song fromplaylist(UI enabled)
 	private void removeFromPlaylist(APIhandler.Song song) {
-	    int confirm = JOptionPane.showConfirmDialog(MusicPlayerGUI.this,
-	            "Remove '" + song.getTitle() + "' from playlist?",
-	            "Confirm Removal",
-	            JOptionPane.YES_NO_OPTION);
+		int confirm = JOptionPane.showConfirmDialog(MusicPlayerGUI.this,
+				"Remove '" + song.getTitle() + "' from playlist?",
+				"Confirm Removal",
+				JOptionPane.YES_NO_OPTION);
 
-	    if (confirm == JOptionPane.YES_OPTION) {
-	        try {
-	            Playlist currentPlaylist = currentPlaylistView;
-	            plHandler.deleteSongFromPlaylist(currentPlaylist, song);
-	            showSongs(currentPlaylist);
-	            showToast("Song removed from playlist");
-	        } catch (Exception ex) {
-	            showError("Error removing song: " + ex.getMessage());
-	        }
-	    }
+		if (confirm == JOptionPane.YES_OPTION) {
+			try {
+				Playlist currentPlaylist = currentPlaylistView;
+				plHandler.deleteSongFromPlaylist(currentPlaylist, song);
+				showSongs(currentPlaylist);
+				showToast("Song removed from playlist");
+			} catch (Exception ex) {
+				showError("Error removing song: " + ex.getMessage());
+			}
+		}
 	}
 	//method to add a song to queue
 	private void addToQueue(APIhandler.Song song) {
@@ -1519,7 +1519,7 @@ public class MusicPlayerGUI extends JFrame {
 		}
 	}
 
-//	Method to update queue display
+	//	Method to update queue display
 	private void updateQueueDisplay() {
 		SwingUtilities.invokeLater(() -> {
 			DefaultListModel<String> model = new DefaultListModel<>();
@@ -1547,25 +1547,25 @@ public class MusicPlayerGUI extends JFrame {
 			queueList.setFixedCellHeight(40);
 			queueList.revalidate();
 			queueList.repaint();
-			
+
 		});
 	}
 //	private void updateQueueDisplay() {
 //	    SwingUtilities.invokeLater(() -> {
 //	        DefaultListModel<String> model = new DefaultListModel<>();
-//	        
+//
 //	        if (songQueue != null && !songQueue.isEmpty()) {
 //	            // Start from current index
 //	            for (int i = songQueue.getCurrentIndex(); i < songQueue.getQueue().size(); i++) {
 //	                Song s = songQueue.getQueue().get(i);
-//	                String prefix = (i == songQueue.getCurrentIndex()) ? 
-//	                              "▶ Now Playing: " : 
+//	                String prefix = (i == songQueue.getCurrentIndex()) ?
+//	                              "▶ Now Playing: " :
 //	                              (i - songQueue.getCurrentIndex() + 1) + ". ";
-//	                model.addElement("<html>" + prefix + s.getTitle() + 
+//	                model.addElement("<html>" + prefix + s.getTitle() +
 //	                                "<br><font color='#888888'>" + s.getArtist() + "</font></html>");
 //	            }
 //	        }
-//	        
+//
 //	        queueList.setModel(model);
 //	        queueList.repaint();
 //	    });
@@ -1764,44 +1764,44 @@ public class MusicPlayerGUI extends JFrame {
 	}
 	//method to playsong which passes song and and a boolean(of if song is currently in Queue)
 	private void playSong(Song song, boolean fromQueue) {
-	    SwingUtilities.invokeLater(() -> {
-	        loadingProgress.setVisible(true);
-	        loadingProgress.setIndeterminate(true);
-	    });
+		SwingUtilities.invokeLater(() -> {
+			loadingProgress.setVisible(true);
+			loadingProgress.setIndeterminate(true);
+		});
 
-	    try {
-	        if (!fromQueue) {
-	            // Clear previous current song and add new one
-	        	if (!songQueue.isEmpty()) {
-	                songQueue.replaceCurrent(song);
-	            } else {
-	                songQueue.add(song);
-	                songQueue.setCurrentIndex(0);
-	            }
-	        }
+		try {
+			if (!fromQueue) {
+				// Clear previous current song and add new one
+				if (!songQueue.isEmpty()) {
+					songQueue.replaceCurrent(song);
+				} else {
+					songQueue.add(song);
+					songQueue.setCurrentIndex(0);
+				}
+			}
 
-	        mediaPlayer.controls().stop();
-	        URL url = new URL(apiHandler.returnURL(song.getVideoId()));
+			mediaPlayer.controls().stop();
+			URL url = new URL(apiHandler.returnURL(song.getVideoId()));
 
-	        SwingUtilities.invokeLater(() -> {
-	            updateThumbnail(song.getThumbnailUrl());
-	            nowPlayingLabel.setText("<html><center>" + song.getTitle() + 
-	                                  "<br>--" + song.getArtist() + "</center></html>");
-	            timeLabel.setText("   " + formatTime(0) + 
-	                             "                                                            " + 
-	                             formatTime(song.getDuration() * 1000L));
-	            updateQueueDisplay(); // Force UI refresh
-	        });
+			SwingUtilities.invokeLater(() -> {
+				updateThumbnail(song.getThumbnailUrl());
+				nowPlayingLabel.setText("<html><center>" + song.getTitle() +
+						"<br>--" + song.getArtist() + "</center></html>");
+				timeLabel.setText("   " + formatTime(0) +
+						"                                                            " +
+						formatTime(song.getDuration() * 1000L));
+				updateQueueDisplay(); // Force UI refresh
+			});
 
-	        preloadAndPlay(url, seekSlider);
+			preloadAndPlay(url, seekSlider);
 
-	    } catch (Exception ex) {
-	        SwingUtilities.invokeLater(() -> {
-	            loadingProgress.setVisible(false);
-	            thumbnail.setIcon(createFallbackIcon());
-	            showError("Error playing song: " + ex.getMessage());
-	        });
-	    }
+		} catch (Exception ex) {
+			SwingUtilities.invokeLater(() -> {
+				loadingProgress.setVisible(false);
+				thumbnail.setIcon(createFallbackIcon());
+				showError("Error playing song: " + ex.getMessage());
+			});
+		}
 	}
 	//Method autoplaynext enables next button action
 	private void autoPlayNext() {
