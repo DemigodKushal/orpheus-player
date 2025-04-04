@@ -747,7 +747,7 @@ public class MusicPlayerGUI extends JFrame {
 						updateQueueDisplay();
 						nowPlayingLabel.setText("<html><center>" + song.getTitle() + "<br>-- " + song.getArtist() + "</center></html>");
 						play_pause.setSelected(true);
-						timeLabel.setText("   00:00                                      " +
+						timeLabel.setText("   00:00                                                            " +
 								formatTime(song.getDuration() * 1000L));
 					});
 
@@ -1453,21 +1453,22 @@ public class MusicPlayerGUI extends JFrame {
 		});
 	}
 	//Method to to remove a song fromplaylist(UI enabled)
-	private void removeFromPlaylist(APIhandler.Song song, int index) {
-		int confirm = JOptionPane.showConfirmDialog(MusicPlayerGUI.this,
-				"Remove '" + song.getTitle() + "' from playlist?",
-				"Confirm Removal",
-				JOptionPane.YES_NO_OPTION);
+	private void removeFromPlaylist(APIhandler.Song song) {
+	    int confirm = JOptionPane.showConfirmDialog(MusicPlayerGUI.this,
+	            "Remove '" + song.getTitle() + "' from playlist?",
+	            "Confirm Removal",
+	            JOptionPane.YES_NO_OPTION);
 
-		if (confirm == JOptionPane.YES_OPTION) {
-            // Remove from current playlist
-            Playlist currentPlaylist = playlists.get(list.getSelectedIndex());
-			plHandler.deleteSongFromPlaylist(currentPlaylist, song);
-
-			// Update UI
-            showSongs(currentPlaylist);
-
-        }
+	    if (confirm == JOptionPane.YES_OPTION) {
+	        try {
+	            Playlist currentPlaylist = currentPlaylistView;
+	            plHandler.deleteSongFromPlaylist(currentPlaylist, song);
+	            showSongs(currentPlaylist);
+	            showToast("Song removed from playlist");
+	        } catch (Exception ex) {
+	            showError("Error removing song: " + ex.getMessage());
+	        }
+	    }
 	}
 	//method to add a song to queue
 	private void addToQueue(APIhandler.Song song) {
@@ -1544,7 +1545,7 @@ public class MusicPlayerGUI extends JFrame {
 		JMenuItem removeItem = new JMenuItem("Remove from Playlist");
 		removeItem.setBackground(new Color(69,69,69));
 		removeItem.setForeground(Color.WHITE);
-		removeItem.addActionListener(evt -> removeFromPlaylist(song, index));
+		removeItem.addActionListener(evt -> removeFromPlaylist(song));
 		popupMenu.add(removeItem);
 		popupMenu.add(queueItem);
 		popupMenu.add(addToPlaylistMenu);
