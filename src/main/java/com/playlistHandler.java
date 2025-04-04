@@ -189,7 +189,7 @@ public class playlistHandler{
         File file = playlist.getPlaylist();
         Path filePath = file.toPath();
         JsonObject songJson = new JsonObject();
-        songJson.addProperty("VideoId", song.getVideoId());
+        songJson.addProperty("videoId", song.getVideoId()); // Consistent casing
         songJson.addProperty("title", song.getTitle());
         songJson.addProperty("artist", song.getArtist());
         songJson.addProperty("duration", song.getDuration());
@@ -206,9 +206,16 @@ public class playlistHandler{
             }
         }
         if(jsonFile.contains(songJson)){
+            Writer writer = null;
+            try {
+                writer = Files.newBufferedWriter(filePath);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
             jsonFile.remove(songJson);
+            gson.toJson(jsonFile, writer);
         }
-        else System.err.println("Song Not Found");
+        else System.err.println("Song not Found");
     }
 
     
@@ -226,6 +233,7 @@ public class playlistHandler{
         return Arrays.stream(initialisePlaylist(playlist))
                      .anyMatch(s -> s.getVideoId().equals(song.getVideoId()));
     }
+
     
 
 }

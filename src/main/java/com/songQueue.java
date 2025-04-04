@@ -13,7 +13,10 @@ public class songQueue {
     public synchronized boolean isEmpty() {
         return queue.isEmpty();
     }
-
+    public synchronized void addFirst(Song song) {
+        queue.addFirst(song);
+        if (currentIndex == -1) currentIndex = 0;
+    }
     public synchronized void add(Song song) {
         queue.add(song);
         if (currentIndex == -1) currentIndex = 0;
@@ -23,8 +26,7 @@ public class songQueue {
         return new ArrayList<>(queue);
     }
 
-    public void setNowPlaying(Song song) {
-    }
+
 
     public void setCurrentIndex(int index) {
         this.currentIndex = index;

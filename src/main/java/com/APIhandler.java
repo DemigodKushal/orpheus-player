@@ -105,5 +105,5 @@
 		            public void setDuration(int duration) {
 		                this.duration = duration;
 		            }
-		        } // End of Song class
-		    } // End of APIhandler class
+		        }
+		    }
