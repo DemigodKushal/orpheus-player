@@ -287,20 +287,28 @@ public class MusicPlayerGUI extends JFrame {
 		play_pause.setBounds(375, 489, 64, 64);
 		getContentPane().add(play_pause);
 		play_pause.addActionListener(e -> {
-			new Thread(() -> {
-				if (mediaPlayer.status().isPlaying()) {
-					mediaPlayer.controls().pause();
-					uiTimer.stop();
-				} else {
-					if (mediaPlayer.status().time() >= mediaPlayer.status().length() - 1000) {
-						mediaPlayer.controls().setTime(0);
-					}
-					mediaPlayer.controls().play();
-					uiTimer.start();
-				}
-				SwingUtilities.invokeLater(() -> {
-				});
-			}).start();
+		    new Thread(() -> {
+		        if (mediaPlayer.status().isPlaying()) {
+		            mediaPlayer.controls().pause();
+		            uiTimer.stop();
+		        } else {
+		            // Handle empty player with existing queue
+		            if (!mediaPlayer.status().isPlayable() && !songQueue.isEmpty()) {
+		                Song current = songQueue.getCurrent();
+		                if (current != null) {
+		                    playSong(current, true);
+		                }
+		            } else if (songQueue.isEmpty()) {
+		                JOptionPane.showMessageDialog(MusicPlayerGUI.this,
+		                    "No songs in queue", "Playback Error",
+		                    JOptionPane.ERROR_MESSAGE);
+		            } else {
+		                mediaPlayer.controls().play();
+		            }
+		            uiTimer.start();
+		        }
+		        SwingUtilities.invokeLater(() -> play_pause.setSelected(mediaPlayer.status().isPlaying()));
+		    }).start();
 		});
 		play_pause.setForeground(new Color(69, 69, 69));
 		play_pause.setBackground(new Color(69, 69, 69));
@@ -1511,7 +1519,7 @@ public class MusicPlayerGUI extends JFrame {
 		}
 	}
 
-	//Method to update queue display
+//	Method to update queue display
 	private void updateQueueDisplay() {
 		SwingUtilities.invokeLater(() -> {
 			DefaultListModel<String> model = new DefaultListModel<>();
@@ -1524,10 +1532,11 @@ public class MusicPlayerGUI extends JFrame {
 
 				// Add upcoming songs with numbering
 				int counter = 1;
-				for (int i = songQueue.getCurrentIndex() + 1; i < songQueue.getQueue().size(); i++) {
+				for (int i = songQueue.getCurrentIndex() + 1 ; i < songQueue.getQueue().size(); i++) {
 					Song s = songQueue.getQueue().get(i);
+					counter=(i - songQueue.getCurrentIndex() );
 					if (s != null) {
-						model.addElement("<html><font color='#666666'>" + counter++ + ".</font> " + s.getTitle() + "</html>");
+						model.addElement("<html><font color='#666666'>" + counter + ".</font> " + s.getTitle() + "</html>");
 					}
 				}
 			} else {
@@ -1538,11 +1547,29 @@ public class MusicPlayerGUI extends JFrame {
 			queueList.setFixedCellHeight(40);
 			queueList.revalidate();
 			queueList.repaint();
-			if (songQueue.getCurrentIndex() >= 0) {
-				queueList.ensureIndexIsVisible(songQueue.getCurrentIndex());
-			}
+			
 		});
 	}
+//	private void updateQueueDisplay() {
+//	    SwingUtilities.invokeLater(() -> {
+//	        DefaultListModel<String> model = new DefaultListModel<>();
+//	        
+//	        if (songQueue != null && !songQueue.isEmpty()) {
+//	            // Start from current index
+//	            for (int i = songQueue.getCurrentIndex(); i < songQueue.getQueue().size(); i++) {
+//	                Song s = songQueue.getQueue().get(i);
+//	                String prefix = (i == songQueue.getCurrentIndex()) ? 
+//	                              "▶ Now Playing: " : 
+//	                              (i - songQueue.getCurrentIndex() + 1) + ". ";
+//	                model.addElement("<html>" + prefix + s.getTitle() + 
+//	                                "<br><font color='#888888'>" + s.getArtist() + "</font></html>");
+//	            }
+//	        }
+//	        
+//	        queueList.setModel(model);
+//	        queueList.repaint();
+//	    });
+//	}
 
 	//Method to create song context menu
 	private void showSongContextMenu(JList<?> list, int index, int x, int y) {
@@ -1745,11 +1772,12 @@ public class MusicPlayerGUI extends JFrame {
 	    try {
 	        if (!fromQueue) {
 	            // Clear previous current song and add new one
-	            if (!songQueue.isEmpty()) {
-	                songQueue.remove(0); // Remove current song
+	        	if (!songQueue.isEmpty()) {
+	                songQueue.replaceCurrent(song);
+	            } else {
+	                songQueue.add(song);
+	                songQueue.setCurrentIndex(0);
 	            }
-	            songQueue.addFirst(song); // Add new song at position 0
-	            songQueue.setCurrentIndex(0); // Explicitly set position
 	        }
 
 	        mediaPlayer.controls().stop();
