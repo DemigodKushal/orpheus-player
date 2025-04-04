@@ -1,6 +1,5 @@
 from ytmusicapi import YTMusic  
 from flask import Flask, jsonify
-from markupsafe import escape
 import yt_dlp
 ytmusic = YTMusic()
 app = Flask("musicAPI")
@@ -19,9 +18,9 @@ def getSongDetails(name):
         })
     
     return jsonify(filtered_results)
+
 @app.route('/play/<videoId>')
 def getSongLink(videoId):
-    import yt_dlp
     video_url = "https://www.youtube.com/watch?v=" + videoId
     ydl_opts = {
     "format": "bestaudio",
@@ -30,10 +29,3 @@ def getSongLink(videoId):
         info_dict = ydl.extract_info(video_url, download=False)
         audio_url = info_dict["url"]
         return audio_url
-
-
-
-
-  
-
-
