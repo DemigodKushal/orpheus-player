@@ -26,6 +26,14 @@ public class songQueue {
         return new ArrayList<>(queue);
     }
 
+    public void replaceCurrent(Song song) {
+        if (!queue.isEmpty() && currentIndex >= 0) {
+            queue.set(currentIndex, song);
+        } else {
+            queue.add(song);
+            currentIndex = 0;
+        }
+    }
 
 
     public void setCurrentIndex(int index) {
@@ -83,4 +91,3 @@ public class songQueue {
         }
     }
 }
-
