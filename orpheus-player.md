@@ -1,6 +1,6 @@
 
+![orpheus](https://github.com/user-attachments/assets/bc19d63f-a247-48bc-8bf4-df1984bf752c)
 
-![[image.psd(2) 1.png]]
 
 https://github.com/DemigodKushal/orpheus-player
 ## A simple yet functional music streamer that fetches music from YouTube. Consists of basic features such as:
