@@ -29,7 +29,10 @@ The main player gui consists of  basic media playback control such as seeking, p
 
 The UI has been written in java-swing, and hence may not look and feel like the greatest of interfaces, but it gets the job done. Also due to lack of resources and knowledge, we could not get our hands on a remote hosting service to host our python script and hence it must run locally for now. This will be changed as soon as we figure out how to host stuff online for free. 
 
-P.S: Required python libraries are present in requirements.txt
+P.S: Required python libraries are present in requirements.txt, run the flask script as 
+```
+flask --app backend run --host=127.0.0.1 --port=5000
+```
 
 # Made by:
 ## Parv Gandhi
