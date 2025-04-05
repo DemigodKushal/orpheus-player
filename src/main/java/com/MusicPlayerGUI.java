@@ -1810,6 +1810,7 @@ public class MusicPlayerGUI extends JFrame {
 		if (nextSong != null) {
 			try {
 				URL url = new URL(api.returnURL(nextSong.getVideoId()));
+				nowPlayingLabel.setText("<html><center>" + nextSong.getTitle() + "<br>-- " + nextSong.getArtist() + "</center></html>");
 				preloadAndPlay(url, seekSlider);
 				play_pause.setSelected(true);
 				updateQueueDisplay();
