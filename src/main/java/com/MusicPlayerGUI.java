@@ -355,6 +355,7 @@ public class MusicPlayerGUI extends JFrame {
 				} else {
 					SwingUtilities.invokeLater(() -> {
 						play_pause.setSelected(false);
+						thumbnail.setIcon(createFallbackIcon());
 						nowPlayingLabel.setText("No songs in queue");
 						updateQueueDisplay();
 					});
@@ -1169,7 +1170,7 @@ public class MusicPlayerGUI extends JFrame {
 		Graphics2D g2d = img.createGraphics();
 
 		// Drawing music note icon
-		g2d.setColor(new Color(80, 80, 80));
+		g2d.setColor(new Color(0, 0, 0));
 		g2d.fillRoundRect(0, 0, 200, 200, 20, 20);
 		g2d.setColor(new Color(30, 215, 96));
 		g2d.setFont(new Font("Arial", Font.BOLD, 48));
