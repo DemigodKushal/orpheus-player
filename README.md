@@ -32,13 +32,13 @@ The UI has been written in java-swing, and hence may not look and feel like the 
 P.S: Required python libraries are present in requirements.txt
 
 # Made by:
-## Parv Gandhi (Mathematics & Computing: Year 1) 24124035
+## Parv Gandhi
 
 * Responsible for implementing all the functions into a working GUI. Implemented several methods to allow normal functions to be integrated in the UI. Played a major role in the debugging of the program. Also designed the logo. Techstack: Java, JavaSwing, and Graphics2D. 
-## Kushal Shrivastava (Mathematics & Computing: Year 1) 24124025
+## Kushal Shrivastava 
 
 * Responsible for creating the backend in python and all classes such as Playlist, Song, PlaylistHandler, APIHandler. Performed final clean-up of code and debugging of the entire program. Captured media showcasing the program as well. Also designed the logo. Techstack: Java, Python - Flask. 
-## Dishant Sharma (Mathematics & Computing: Year 1) 24124016
+## Dishant Sharma 
 
 * Helped in implementing Playlists and Queue functionality.
 
