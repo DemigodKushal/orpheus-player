@@ -206,28 +206,16 @@ public class playlistHandler{
             }
         }
         if(jsonFile.contains(songJson)){
-            Writer writer = null;
-            try {
-                writer = Files.newBufferedWriter(filePath);
+            try (Writer writer = Files.newBufferedWriter(filePath)) {
+                jsonFile.remove(songJson);
+                gson.toJson(jsonFile, writer);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-            jsonFile.remove(songJson);
-            gson.toJson(jsonFile, writer);
         }
         else System.err.println("Song not Found");
     }
 
-    
-    public boolean removeFromPlaylist(Playlist playlist, Song song) throws IOException {
-        List<Song> songs = new ArrayList<>(Arrays.asList(initialisePlaylist(playlist)));
-        boolean removed = songs.removeIf(s -> s.getVideoId().equals(song.getVideoId()));
-        
-        if (removed) {
-            savePlaylist(playlist, songs);
-        }
-        return removed;
-    }
 
     public boolean isSongInPlaylist(Playlist playlist, Song song) throws IOException {
         return Arrays.stream(initialisePlaylist(playlist))
