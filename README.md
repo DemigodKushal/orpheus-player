@@ -41,9 +41,7 @@ flask --app backend run --host=127.0.0.1 --port=5000
 ## Kushal Shrivastava 
 
 * Responsible for creating the backend in python and all classes such as Playlist, Song, PlaylistHandler, APIHandler. Performed final clean-up of code and debugging of the entire program. Captured media showcasing the program as well. Also designed the logo. Techstack: Java, Python - Flask. 
-## Dishant Sharma 
 
-* Helped in implementing Playlists and Queue functionality.
 
 
 
